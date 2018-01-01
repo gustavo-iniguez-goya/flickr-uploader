@@ -1,49 +1,16 @@
-# synology-flickr-folder-uploader
-Simple script to upload a folder of photos/videos to a new set in Flickr
+# flickr-uploader
+Simple script to upload a folder of photos/videos to a new set in Flickr. I use it from a Raspberry Pi, to upload the photos to flickr.
 
-I have used several scripts to upload photos from my Synology NAS to Flickr, but recently all of them failed (due to a change in authentication api).
-
-
-So I cooked my own script, based in the work of  https://github.com/sybrenstuvel/flickrapi and https://github.com/jamesmstone
+Based in the work of https://github.com/alfem/synology-flickr-folder-uploader, https://github.com/sybrenstuvel/flickrapi and https://github.com/jamesmstone
 /flickr-uploadr
 
-# Installation 
-
-I have tested these steps in my DS212j, but this procedure probably work in many other models.
-
-* Connect via SSH to your Synology NAS
-
-  ssh admin@mynas
-
-* Create a folder for the flickr api
-
-  mkdir api
-
-* Set python to use that folder
-
-  export PYTHONPATH=/var/services/homes/admin/api
-
-* Install the flickr api
-
-  easy_install  --install-dir=/var/services/homes/admin/api flickrapi
-
-* Download the script (use your favourite browser, or wget command in your Synology)
-
-  wget https://raw.githubusercontent.com/alfem/synology-flickr-folder-uploader/master/flickr-folder-uploader.py
- 
-* Give it execution permissions
-
-  chmod u+x flickr-folder-uploader.py
-
+## Installation
+* sudo apt-get install python-flickrapi
 * Create a new app in your Flickr account: https://www.flickr.com/services/apps/create/apply and jot down api_key and api_secret
 * Edit the script and adjust the api_key, api_secreet and paths at the begining
 * Run it!
 
-  ./flickr-folder-uploader.py /volume1/alfem/Pics/Coches/ coches
-
-  First parameter = Folder to upload
-  
-  Second parameter = Tag for the photos 
+  ./flickr-uploader.py -n album_name -f image.jpg
 
 * On first run, the script will show an URL you need to visit in order to authorize it.Open the url in your brwoser, authorize the script and copy the code shown.   
 

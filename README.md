@@ -28,15 +28,15 @@ You can install the api system wide and avoid setting the PYTHONPATH, but I pref
   -fd FILE_DESCRIPTION, --file-description FILE_DESCRIPTION
                         file description
   -t TAGS, --tags TAGS  One or more tags for all the files (use quotes if needed)
-  -n ALBUM, --album ALBUM
-                        Name of the set (use quotes if needed)
+  -n ALBUMS, --albums ALBUMS
+                        Name of the albums to add photos to, separated by commas (,)
   -ad ALBUM_DESCRIPTION, --album-description ALBUM_DESCRIPTION
                         Album description
   -df, --delete-after-upload
                         Delete each file after upload
   -ig IGNORE_PATTERN, --ignore-pattern IGNORE_PATTERN
-                        Ignore files with these patterns, separated by , For example: "hdr*,a*,.*jpg"
+                        Ignore files with these patterns, separated by commas (,). For example: "hdr*,a*,.*jpg"
   -pf PUBLIC_PHOTOS, --public-photos PUBLIC_PHOTOS
-                        public or private photos
+                        public (1) or private (0, default) photos
 ```
  

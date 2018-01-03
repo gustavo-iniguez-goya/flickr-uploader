@@ -5,9 +5,6 @@
 # Inspired in https://github.com/alfem/synology-flickr-folder-uploader ->
 # https://github.com/sybrenstuvel/flickrapi and https://github.com/jamesmstone/flickr-uploadr
 
-# Get an api key and an api secret: https://www.flickr.com/services/apps/create/apply
-# Put those values in these variables
-
 # Documentation: https://stuvel.eu/flickrapi-doc/index.html
 # Flickr API: https://www.flickr.com/services/api/
 
@@ -18,13 +15,15 @@ import argparse
 import json
 import re
 
+# Get an api key and an api secret: https://www.flickr.com/services/apps/create/apply
+
 class FlickrUploader():
     USER_ID     = ""
     API_KEY     = ""
     API_SECRET  = ""
     flickr      = None
 
-    ALBUM_NAME          = ""
+    ALBUMS_NAME         = []
     TAGS                = ""
     ALBUM_DESCRIPTION   = ""
     PHOTO_TITLE         = None
@@ -79,7 +78,7 @@ class FlickrUploader():
         except flickrapi.FlickrError,e:
             raise Exception, str(e)
 
-    def create_album(self, _name=ALBUM_NAME, _description=ALBUM_DESCRIPTION, _cover_photo_id=None):
+    def create_album(self, _name=ALBUMS_NAME, _description=ALBUM_DESCRIPTION, _cover_photo_id=None):
         try:
             if _cover_photo_id == None:
                 print "We need the cover photo id"
@@ -111,7 +110,7 @@ class FlickrUploader():
 
         return None
 
-    def add_photos_to_album(self, _photos_ids, _album_name=None):
+    def add_photos_to_album(self, _photos_ids, _albums_name=None):
         """
         Add photos to an album. If the album does not exist, it'll be created.
 
@@ -120,23 +119,25 @@ class FlickrUploader():
         :returns: True|False
         """
         try:
-            if _album_name != None:
-                    self.ALBUM_NAME = _album_name
+            if _albums_name != None:
+                self.ALBUMS_NAME = _albums_name
 
-            album_id = self.get_album_id(self.ALBUM_NAME)
-            if album_id == None:
-                album_id = self.create_album(self.ALBUM_NAME, self.ALBUM_DESCRIPTION, _photos_ids[0])
+            for _album_name in self.ALBUMS_NAME:
+                album_id = self.get_album_id(_album_name)
                 if album_id == None:
-                    print "[!] add_photos_to_album() error: Album not created"
-                    return False
+                    album_id = self.create_album(_album_name, self.ALBUM_DESCRIPTION, _photos_ids[0])
+                    if album_id == None:
+                        print "[!] add_photos_to_album() error: Album not created"
+                        return False
 
-            for photo_id in _photos_ids:
-                try:
-                    print "[*] Adding photo to album %s with ID %s" % (album_id, photo_id)
-                    resp = self.flickr.photosets.addPhoto(photoset_id=album_id, photo_id=photo_id)
-                except Exception,e:
-                    print "\n[W] Warning adding file to album", photo_id
-                    print "    Exception: %s" % str(e)
+                print "[i] Adding photos to the album %s" % _album_name
+                for photo_id in _photos_ids:
+                    try:
+                        print "[*] Adding photo to album %s with ID %s" % (album_id, photo_id)
+                        resp = self.flickr.photosets.addPhoto(photoset_id=album_id, photo_id=photo_id)
+                    except Exception,e:
+                        print "\n[W] Warning adding file to album", photo_id
+                        print "    Exception: %s" % str(e)
 
             return True
         except flickrapi.FlickrError,e:
@@ -146,10 +147,10 @@ class FlickrUploader():
     def upload_folder(self, _path):
         try:
             f = os.path.abspath(_path)+"/"
-            if self.ALBUM_NAME == "":
-                self.ALBUM_NAME = os.path.basename(os.path.normpath(_path))
+            if self.ALBUMS_NAME == "":
+                self.ALBUMS_NAME = os.path.basename(os.path.normpath(_path))
 
-            print "[+] Uploading folder: %s with name: %s" % (params.folder, self.ALBUM_NAME)
+            print "[+] Uploading folder: %s with name: %s" % (params.folder, self.ALBUMS_NAME)
 
             photo_ids = self.upload_files(os.listdir(f), _path)
             if photo_ids != None and len(photo_ids) > 0:
@@ -163,6 +164,7 @@ class FlickrUploader():
         https://www.flickr.com/services/api/upload.api.html
 
         :param _photos_list: Array of path files to images.
+        :param _base_dir: Base directory when uploading a folder (optional)
         :returns: Array of the IDs of the photos uploaded
         """
         photo_ids = []
@@ -228,8 +230,8 @@ class FlickrUploader():
     def set_tags(self, _tags):
         self.TAGS = _tags
 
-    def set_album_name(self, _name):
-        self.ALBUM_NAME = _name
+    def set_albums_name(self, _name):
+        self.ALBUMS_NAME = _name.split(',')
 
     def set_album_description(self, _description):
         self.ALBUM_DESCRIPTION = _description
@@ -274,11 +276,11 @@ if __name__ == "__main__":
     parser.add_argument("-ft",  "--file-title", default="", help="sets file title")
     parser.add_argument("-fd",  "--file-description", default="", help="file description")
     parser.add_argument("-t",   "--tags", default="", help="One or more tags for all the files (use quotes if needed)")
-    parser.add_argument("-n",   "--album", help="Name of the set (use quotes if needed)")
+    parser.add_argument("-n",   "--albums", help="Name of the albums to add photos to, separated by commas (,)")
     parser.add_argument("-ad",  "--album-description", default="", help="Album description")
-    parser.add_argument("-df",  "--delete-after-upload", action="store_true", help="Delete each file after upload")
-    parser.add_argument("-ig",  "--ignore-pattern", help="Ignore files with these patterns, separated by ,. For example: \"hdr*,a*\"")
-    parser.add_argument("-pf",  "--public-photos", default="0", help="public or private photos")
+    parser.add_argument("-df",  "--delete-after-upload", action="store_true", help="Delete each file after being uploaded")
+    parser.add_argument("-ig",  "--ignore-pattern", help="Ignore files with these patterns, separated by commas (,). For example: \"hdr*,a*\"")
+    parser.add_argument("-pf",  "--public-photos", default="0", help="public (1) or private (0) photos (default private)")
     params=parser.parse_args()
 
     if not params.folder and not params.single_file:
@@ -295,10 +297,10 @@ if __name__ == "__main__":
     if params.public_photos:
         fUploader.set_photos_privacy(params.public_photos)
 
-    if params.album:
-      fUploader.set_album_name(params.album)
+    if params.albums:
+      fUploader.set_albums_name(params.albums)
     else:
-      fUploader.set_album_name(os.path.basename(os.path.normpath(os.path.dirname(params.single_file))))
+      fUploader.set_albums_name(os.path.basename(os.path.normpath(os.path.dirname(params.single_file))))
 
     if params.album_description:
         fUploader.set_album_description(params.album_description)

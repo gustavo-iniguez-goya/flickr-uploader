@@ -128,7 +128,7 @@ class FlickrUploader():
                     album_id = self.create_album(_album_name, self.ALBUM_DESCRIPTION, _photos_ids[0])
                     if album_id == None:
                         print "[!] add_photos_to_album() error: Album not created"
-                        return False
+                        continue
 
                 print "[i] Adding photos to the album %s" % _album_name
                 for photo_id in _photos_ids:

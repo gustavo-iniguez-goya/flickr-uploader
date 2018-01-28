@@ -211,7 +211,7 @@ class FlickrUploader():
                     photo_id = uploadResp.findall('photoid')[0].text
                     print "[+] %s OK. Flickr id = %s" % (filename, photo_id)
                     if self.PHOTOS_LAT != None and self.PHOTOS_LON != None:
-                        ret = self.set_location(photo_id, self.PHOTOS_LAT, self.PHOTOS_LON, "11", self.PHOTOS_CONTEXT)
+                        ret = self.set_photo_location(photo_id, self.PHOTOS_LAT, self.PHOTOS_LON, "11", self.PHOTOS_CONTEXT)
                         print "[i] GEO ret: " + str(ret)
                     ret = self.set_license(photo_id, self.PHOTOS_LICENSE)
                     print "[i] License ret: " + str(ret)
@@ -242,11 +242,15 @@ class FlickrUploader():
     def set_photo_description(self, _description):
         self.PHOTO_DESCRIPTION = _description
 
+    def set_photo_location(self, _photo_id, _lat, _lon, _accuracy, _context):
+        return self.flickr.photos.geo.setLocation(photo_id=_photo_id, lat=_lat, lon=_lon, accuracy=_accuracy, context=_context)
+
+    def set_location(self, latitude, longitude):
+        self.PHOTOS_LAT = latitude;
+        self.PHOTOS_LON = longitude;
+
     def set_license(self, _photo_id, _license=PHOTOS_LICENSE):
         return self.flickr.photos.licenses.setLicense(photo_id=_photo_id, license_id=_license)
-
-    def set_location(self, _photo_id, _lat, _lon, _accuracy, _context):
-        return self.flickr.photos.geo.setLocation(photo_id=_photo_id, lat=_lat, lon=_lon, accuracy=_accuracy, context=_context)
 
     def set_delete_after_upload(self, _delete=False):
         """
@@ -281,6 +285,7 @@ if __name__ == "__main__":
     parser.add_argument("-df",  "--delete-after-upload", action="store_true", help="Delete each file after being uploaded")
     parser.add_argument("-ig",  "--ignore-pattern", help="Ignore files with these patterns, separated by commas (,). For example: \"hdr*,a*\"")
     parser.add_argument("-pf",  "--public-photos", default="0", help="public (1) or private (0) photos (default private)")
+    parser.add_argument("-sl",  "--set-location", help="set photos location, format: <lat>:<lon>")
     params=parser.parse_args()
 
     if not params.folder and not params.single_file:
@@ -289,6 +294,11 @@ if __name__ == "__main__":
 
     fUploader = FlickrUploader()
     fUploader.authenticate()
+
+    if params.set_location:
+        geo = params.set_location.split(':')
+        if len(geo) != 2:
+            fUploader.set_location(lat[0], geo[1])
 
     if params.ignore_pattern:
         print "Ignore pattern: %s" % params.ignore_pattern.split(',')
